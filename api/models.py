@@ -1,9 +1,24 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from db_setup import db
 
-app = Flask(__name__)
 db = SQLAlchemy()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost:3306/localidades?charset=utf8'
+    db.init_app(app)
+    
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as exception:
+            print("Got the following exception when attempting db.create_all() in __init__.py: " + str(exception))
+        finally:
+            print("db.create_all() in __init__.py was successful - no exceptions were raised")
+
+    from .models import Provincia, Departamento, Municipio, Localidad
+
+    return app
 
 class Provincia(db.Model):
     provincia_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -28,30 +43,6 @@ class Localidad(db.Model):
     municipio = db.relationship('Municipio', backref=db.backref('localidades', lazy=True))
 
 
-@app.route('/provincias', methods=['GET'])
-def obtener_provincias():
-    provincias = Provincia.query.all()
-    resultado = [{'provincia_id': provincia.provincia_id, 'name': provincia.name} for provincia in provincias]
-    return jsonify(resultado)
-
-@app.route('/departamentos', methods=['GET'])
-def obtener_departamentos():
-    departamentos = Departamento.query.all()
-    resultado = [{'departamento_id': departamento.departamento_id, 'name': departamento.name, 'provincia_provincia_id': departamento.provincia_provincia_id} for departamento in departamentos]
-    return jsonify(resultado)
-
-@app.route('/municipios', methods=['GET'])
-def obtener_municipios():
-    municipios = Municipio.query.all()
-    resultado = [{'municipio_id': municipio.municipio_id, 'name': municipio.name, 'departamento_departamento_id': municipio.departamento_departamento_id} for municipio in municipios]
-    return jsonify(resultado)
-
-@app.route('/localidades', methods=['GET'])
-def obtener_localidades():
-    localidades = Localidad.query.all()
-    resultado = [{'localidad_id': localidad.localidad_id, 'name': localidad.name, 'municipio_municipio_id': localidad.municipio_municipio_id} for localidad in localidades]
-    return jsonify(resultado)
-
-
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)
