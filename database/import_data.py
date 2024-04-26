@@ -1,9 +1,10 @@
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
+from api.models import db
 
 def import_data():
-    csv_file = 'Listado.csv'
+    csv_file = 'database/Listado.csv'
     encoding = 'utf-8'
     data = pd.read_csv(csv_file, sep=',', header=None, encoding=encoding)
 
@@ -71,3 +72,6 @@ def import_data():
         engine.dispose()
 
     print("Los datos se han importado correctamente a la base de datos con las relaciones indicadas.")
+
+if __name__ == '__main__':
+    import_data()

@@ -1,29 +1,9 @@
-from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-def create_app():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost:3306/localidades?charset=utf8'
-    db.init_app(app)
-    
-    with app.app_context():
-        try:
-            db.create_all()
-        except Exception as exception:
-            print("Got the following exception when attempting db.create_all() in __init__.py: " + str(exception))
-        finally:
-            print("db.create_all() in __init__.py was successful - no exceptions were raised")
-
-    from .models import Provincia, Departamento, Municipio, Localidad
-
-    return app
+from app_factory import db
 
 class Provincia(db.Model):
     provincia_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), unique=True)
-
+    
 class Departamento(db.Model):
     departamento_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255))
@@ -41,8 +21,3 @@ class Localidad(db.Model):
     name = db.Column(db.String(255))
     municipio_municipio_id = db.Column(db.Integer, db.ForeignKey('municipio.municipio_id'))
     municipio = db.relationship('Municipio', backref=db.backref('localidades', lazy=True))
-
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
