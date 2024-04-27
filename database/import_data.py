@@ -1,16 +1,18 @@
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
-from api.models import db
+#from api.models import db
 
 def import_data():
-    csv_file = 'database/Listado.csv'
-    encoding = 'utf-8'
-    data = pd.read_csv(csv_file, sep=',', header=None, encoding=encoding)
+    # Archivo CSV y codificación
+    csv_file = 'ListadoUT8.csv'
+    data = pd.read_csv(csv_file, sep=',', header=None)
 
-    engine = create_engine('mysql://root@localhost/localidades?charset=utf8')
+    # Conexión a la base de datos
+    engine = create_engine('mysql://root@localhost/localidades?')
 
     try:
+        # Verificar si las tablas existen en la base de datos
         for table in ['provincia', 'departamento', 'municipio', 'localidad']:
             inspector = inspect(engine)
             if not inspector.has_table(table):
@@ -63,12 +65,15 @@ def import_data():
 
     except IntegrityError as e:
         if "Duplicate entry" in str(e.orig):
-            raise ValueError("Se intentó insertar una provincia duplicada. La operación ha sido omitida.")
+            print("Se intentó insertar una provincia duplicada. La operación ha sido omitida.")
         else:
-            raise ValueError(f"Error de integridad en la base de datos. Detalles: {e.orig}")
+            print(f"Excepción: Error de integridad en la base de datos. Detalles: {e.orig}")
+    except ValueError as e:
+        print(f"Excepción: {e}")
     except Exception as e:
-        raise ValueError(f"Excepción: {e}")
+        print(f"Excepción: Ocurrió un error: {e}")
     finally:
+        # Cerrar la conexión a la base de datos
         engine.dispose()
 
     print("Los datos se han importado correctamente a la base de datos con las relaciones indicadas.")
