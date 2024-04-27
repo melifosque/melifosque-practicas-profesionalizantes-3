@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 def import_data():
     # Archivo CSV y codificación
-    csv_file = 'ListadoUT8.csv'
+    csv_file = 'database\ListadoUT8.csv'
     data = pd.read_csv(csv_file, sep=',', header=None)
 
     # Conexión a la base de datos

@@ -5,7 +5,7 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/localidades?charset=utf8'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/localidades?'
     app.config["SQLALCHEMY_ECHO"] = True 
     db.init_app(app)
 
