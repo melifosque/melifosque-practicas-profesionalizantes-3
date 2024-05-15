@@ -1,0 +1,17 @@
+py -m api.app
+
+Diagnostico/
+│
+├── api
+│    ├── __init__.py
+│    ├── models.py
+│    └── routes.py
+├── database
+│    ├── __init__.py
+│    ├── import_data.py
+│    └── Listado.csv
+├── static
+│    ├── style.css
+│    ├── index.html
+│    └── JavaScript.js
+└──App.py
