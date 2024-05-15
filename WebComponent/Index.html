@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Component</title>
+</head>
+<body>
+  <template id="table-template">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </template>
+
+  <script>
+    console.log('Introducción a WebComponents');
+
+    class WebComponents extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+            this.data = []; // Inicializa data como un array vacío
+        }
+  
+        connectedCallback() {
+            // Creación de los botones dentro del sombreador
+            const buttonList = document.createElement('button');
+            const buttonCreate = document.createElement('button');
+            const buttonEdit = document.createElement('button');
+            const buttonDelete = document.createElement('button');
+            const buttonOther = document.createElement('button');
+
+            buttonList.textContent = 'Listar';
+            buttonCreate.textContent = 'Crear';
+            buttonEdit.textContent = 'Editar';
+            buttonDelete.textContent = 'Eliminar';
+            buttonOther.textContent = '...';
+
+            this.shadowRoot.appendChild(buttonList);
+            this.shadowRoot.appendChild(buttonCreate);
+            this.shadowRoot.appendChild(buttonEdit);
+            this.shadowRoot.appendChild(buttonDelete);
+            this.shadowRoot.appendChild(buttonOther);
+
+    
+            this.showTable();
+
+
+            buttonList.addEventListener('click', () => {
+                fetch('cuentas.json', { method:'post', body: JSON.stringify(args) } ).then;
+            });
+
+            buttonCreate.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID:');
+                const username = prompt('Ingrese el nombre de usuario:');
+                const saldo = prompt('Ingrese el saldo:');
+                const newAccount = { id, username, saldo };
+                console.log('Nuevo objeto creado:', newAccount);
+                this.data.push(newAccount);
+                this.showTable();
+            });
+
+            buttonEdit.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID del objeto a editar:');
+                const index = this.data.findIndex(account => account.id === id);
+                if (index !== -1) {
+                    const previousData = { ...this.data[index] };
+                    const username = prompt('Ingrese el nuevo nombre de usuario:');
+                    const saldo = prompt('Ingrese el nuevo saldo:');
+                    this.data[index] = { id, username, saldo };
+                    console.log('Versión anterior:', previousData);
+                    console.log('Versión actualizada:', this.data[index]);
+                    this.showTable();
+                } else {
+                    console.error('ID no encontrado');
+                }
+            });
+
+            buttonDelete.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID del objeto a eliminar:');
+                const index = this.data.findIndex(account => account.id === id);
+                if (index !== -1) {
+                    const deletedAccount = this.data.splice(index, 1)[0];
+                    console.log('Objeto eliminado:', deletedAccount);
+                    this.showTable();
+                } else {
+                    console.error('ID no encontrado');
+                }
+            });
+
+            buttonOther.addEventListener('click', () => {
+                console.log('¡Botón other!');
+            });
+        }
+
+        showTable() {
+            const tableTemplate = document.getElementById('table-template');
+            const templateContent = tableTemplate.content.cloneNode(true);
+            const tableBody = templateContent.querySelector('#table-body');
+            tableBody.innerHTML = '';
+            this.data.forEach(account => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.id}</td>
+                    <td>${account.username}</td>
+                    <td>${account.saldo}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            this.shadowRoot.appendChild(templateContent);
+        }
+    }
+
+    customElements.define('web-component', WebComponents);
+  </script>
+
+  <!-- Agrega el elemento personalizado al cuerpo del documento -->
+  <web-component></web-component>
+</body>
+</html>
