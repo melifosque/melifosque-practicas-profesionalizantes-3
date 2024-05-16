@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Component</title>
+</head>
+<body>
+  <template id="table-template">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>credit</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </template>
+
+  <script>
+    console.log('Introducción a WebComponents');
+
+    class WebComponents extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+            this.data = []; // Inicializa data como un array vacío
+            this.buttonList = document.createElement('button');
+            this.buttonCreate = document.createElement('button');
+            this.buttonEdit = document.createElement('button');
+            this.buttonDelete = document.createElement('button');
+            this.buttonOther = document.createElement('button');
+
+            this.buttonList.textContent = 'Listar';
+            this.buttonCreate.textContent = 'Crear';
+            this.buttonEdit.textContent = 'Editar';
+            this.buttonDelete.textContent = 'Eliminar';
+            this.buttonOther.textContent = '...';
+
+            this.shadowRoot.appendChild(this.buttonList);
+            this.shadowRoot.appendChild(this.buttonCreate);
+            this.shadowRoot.appendChild(this.buttonEdit);
+            this.shadowRoot.appendChild(this.buttonDelete);
+            this.shadowRoot.appendChild(this.buttonOther);
+            this.showTable();
+            // Agrega los estilos al Shadow DOM
+            const style = document.createElement('style');
+            style.textContent = `
+                button {
+                    background-color: #FFC0CB;
+                    border: none;
+                    color: black;
+                    padding: 10px 24px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    font-size: 16px;
+                    margin: 4px 2px;
+                    cursor: pointer;
+                }
+                
+                table {
+                    font-family: Arial, sans-serif;
+                    border-collapse: collapse;
+                    width: 100%;
+            }
+                
+                th, td {
+                    border: 1px solid #dddddd;
+                    text-align: left;
+                    padding: 8px;
+                }
+                
+                tr:nth-child(even) {
+                    background-color:#FDF1F1;
+                }
+            `;
+            this.shadowRoot.appendChild(style);
+
+            }
+  
+        connectedCallback() {
+            this.buttonList.addEventListener('click', () => {
+                fetch('/account') // Cambiado para hacer la solicitud al servidor
+                    .then(response => {
+                        if (!response.ok) {
+                        throw new Error('Error al obtener los datos del servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        this.data = data; // Actualizar los datos
+                        this.showTable();
+                        console.log(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                    
+            });
+            this.buttonCreate.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID:');
+                if (id && this.data.some(account => account.id.toString() === id.toString())) {
+                    alert('El ID ya existe. Por favor, ingrese un ID único.');
+                    return;
+                }
+                const username = prompt('Ingrese el nombre de usuario:');
+                const creditInput = prompt('Ingrese el saldo:');
+                if (!id || !username || isNaN(creditInput)) {
+                    alert('Por favor, ingrese un ID, un nombre de usuario y un saldo válido.');
+                    return;
+                }
+        
+                const newAccount = { id: parseInt(id), username, credit: creditInput };
+                console.log('Nuevo objeto creado:', newAccount);
+            
+                fetch('/account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newAccount)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al crear cuenta en el servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    this.data.push(data.nuevaCuenta);
+                    this.showTable();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+            
+            this.buttonEdit.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID del objeto a editar:');
+                const index = this.data.findIndex(account => account.id.toString() === id.toString());
+                if (index !== -1) {
+                    const previousData = { ...this.data[index] };
+                    const username = prompt('Ingrese el nuevo nombre de usuario:');
+                    const creditInput = prompt('Ingrese el nuevo saldo:');
+                    if (!isNaN(creditInput)) {
+                        // No formatear el saldo y enviar solo el número
+                        this.data[index] = { ...this.data[index], username, credit: creditInput };
+                        console.log('Versión anterior:', previousData);
+                        console.log('Versión actualizada:', this.data[index]);
+                        this.showTable();
+            
+                        fetch(`/account/${id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, credit: creditInput })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error al actualizar cuenta en el servidor');
+                            }
+                            console.log('Cuenta actualizada en el servidor');
+                            this.showTable(); 
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    } else {
+                        alert('Por favor, ingrese un saldo válido.');
+                    }
+                } else {
+                    console.error('ID no encontrado');
+                }
+            });
+            
+            
+            this.buttonDelete.addEventListener('click', () => {
+                const id = prompt('Ingrese el ID del objeto a eliminar:');
+                const index = this.data.findIndex(account => account.id.toString() === id.toString());
+                if (index !== -1) {
+                    const deletedAccount = this.data.splice(index, 1)[0];
+                    console.log('Objeto eliminado:', deletedAccount);
+        
+                    fetch(`/account/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al eliminar cuenta en el servidor');
+                        }
+                        console.log('Cuenta eliminada en el servidor');
+                        this.showTable();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.showTable(); 
+                    });
+                } else {
+                    console.error('ID no encontrado');
+                    this.showTable();
+                }
+            });
+
+            this.buttonOther.addEventListener('click', () => {
+                console.log('¡Botón other!');
+            });
+        
+        }
+
+            showTable() {
+                const tableTemplate = document.getElementById('table-template');
+                const templateContent = tableTemplate.content.cloneNode(true);
+                const tableBody = templateContent.querySelector('#table-body');
+                tableBody.innerHTML = '';
+                this.data.forEach(account => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${account.id}</td>
+                        <td>${account.username}</td>
+                        <td>${account.credit}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                const existingTable = this.shadowRoot.querySelector('table');
+                if (existingTable) {
+                    existingTable.parentNode.replaceChild(templateContent, existingTable);
+                } else {
+                    this.shadowRoot.appendChild(templateContent);
+                }
+            }
+    }
+
+    customElements.define('web-component', WebComponents);
+  </script>
+  <web-component></web-component>
+</body>
+</html>
