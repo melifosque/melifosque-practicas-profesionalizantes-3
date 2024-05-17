@@ -31,7 +31,7 @@ db.connect((err) => {
 
         let cuentas;
         try {
-            cuentas = JSON.parse(data).cuentas; // Obtén el array de cuentas
+            cuentas = JSON.parse(data).cuentas;
         } catch (parseError) {
             console.error('Error al parsear el contenido de cuentas.json:', parseError);
             return;
@@ -67,10 +67,10 @@ db.connect((err) => {
 // Middleware para parsear JSON
 app.use(express.json());
 
-// Servir contenido estático desde la carpeta 'public'
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta para listar account
+
 app.get('/account', (req, res) => {
     const sql = 'SELECT * FROM account';
     db.query(sql, (err, result) => {
@@ -87,13 +87,13 @@ app.use(express.json());
 
 // Ruta para crear una nueva cuenta
 app.post('/account', (req, res) => {
-    const { id, username, saldo } = req.body;
+    const { id, username, credit } = req.body;
     const sql = 'INSERT INTO account (id, username, credit) VALUES (?, ?, ?)';
-    db.query(sql, [id, username, saldo], (err, result) => {
+    db.query(sql, [id, username, credit], (err, result) => {
         if (err) {
             res.status(500).json({ error: 'Error al crear cuenta en la base de datos' });
         } else {
-            res.json({ message: 'Cuenta creada correctamente', nuevaCuenta: { id, username, saldo } });
+            res.json({ message: 'Cuenta creada correctamente', nuevaCuenta: { id, username, credit } });
         }
     });
 });
@@ -101,13 +101,13 @@ app.post('/account', (req, res) => {
 // Ruta para editar una cuenta existente
 app.put('/account/:id', (req, res) => {
     const id = req.params.id;
-    const { username, saldo } = req.body;
+    const { username, credit } = req.body;
     const sql = 'UPDATE account SET username = ?, credit = ? WHERE id = ?';
-    db.query(sql, [username, saldo, id], (err, result) => {
+    db.query(sql, [username, credit, id], (err, result) => {
         if (err) {
             res.status(500).json({ error: 'Error al editar cuenta en la base de datos' });
         } else {
-            res.json({ message: 'Cuenta editada correctamente', id, username, saldo });
+            res.json({ message: 'Cuenta editada correctamente', id, username, credit });
         }
     });
 });
